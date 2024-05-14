@@ -35,9 +35,9 @@ def show_receive_button():
     for widget in window.winfo_children():
         widget.destroy()
     global entry
-    label = tk.Label(window, text=f"Password for room {room_number}", bg="#FFFFFF", font=("Helvetica", 12))
+    label = tk.Label(window, text=f"Password for room {room_number}", bg="#FFFFFF", font=("Helvetica", 15))
     label.pack(pady=(15, 0))  # 위쪽 패딩만 조정하여 Label과 Entry 사이의 거리를 조절합니다.
-    entry = tk.Entry(window, width=25, font=("Helvetica", 15), justify="center") 
+    entry = tk.Entry(window, width=30, font=("Helvetica", 15), justify="center") 
     entry.pack(pady=(0, 15))  # 위쪽 패딩을 0으로 설정하여 Label 바로 아래 위치하게 합니다.
     show_numpad(mode='check_password')
 
@@ -88,10 +88,10 @@ window = tk.Tk()
 window.title("Autonomous Delivery")
 window.configure(background="#FFFFFF")
 
-label = tk.Label(window, text="Please enter your destination", bg="#FFFFFF", font=("Helvetica", 12))
+label = tk.Label(window, text="Please enter your destination", bg="#FFFFFF", font=("Helvetica", 15))
 label.pack(pady=(15, 0))  # 위쪽 패딩만 조정하여 Label과 Entry 사이의 거리를 조절합니다.
 
-entry = tk.Entry(window, width=25, font=("Helvetica", 15), justify="center")
+entry = tk.Entry(window, width=30, font=("Helvetica", 15), justify="center")
 entry.pack(pady=(0, 15))  # 위쪽 패딩을 0으로 설정하여 Label 바로 아래 위치하게 합니다.
 
 show_numpad()
