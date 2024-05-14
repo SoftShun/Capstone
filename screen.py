@@ -58,7 +58,7 @@ def show_complete_button():
 
 def end_process():
     messagebox.showinfo("Complete", "Delivery is complete.")
-    window.quit()
+    window.destroy()
 
 def show_numpad(mode='send_communication'):
     # Create the frame for the numpad.
