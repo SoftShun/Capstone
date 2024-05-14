@@ -10,6 +10,15 @@ passwords = {
     '406': '6666'
 }
 
+def center_window(window, width, height):
+    screen_width = window.winfo_screenwidth()
+    screen_height = window.winfo_screenheight()
+
+    x = (screen_width - width) // 2
+    y = (screen_height - height) // 2
+
+    window.geometry(f"{width}x{height}+{x}+{y}")
+
 def append_number(num):
     current = str(entry.get())
     entry.delete(0, tk.END)
@@ -87,6 +96,14 @@ def show_numpad(mode='send_communication'):
 window = tk.Tk()
 window.title("Autonomous Delivery")
 window.configure(background="#FFFFFF")
+
+# 윈도우 크기 설정
+window_width = 500
+window_height = 400
+window.geometry(f"{window_width}x{window_height}")
+
+# 윈도우를 화면 중앙에 배치
+center_window(window, window_width, window_height)
 
 label = tk.Label(window, text="Please enter your destination", bg="#FFFFFF", font=("Helvetica", 15))
 label.pack(pady=(15, 0))  # 위쪽 패딩만 조정하여 Label과 Entry 사이의 거리를 조절합니다.
