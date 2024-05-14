@@ -35,11 +35,11 @@ def show_receive_button():
     for widget in window.winfo_children():
         widget.destroy()
     global entry
-    entry = tk.Entry(window, width=40, font=("Georgia", 15)) 
-    entry.pack(pady=15)
-    show_numpad()
-    submit_button = tk.Button(window, text="Enter Password", command=check_password, height=2, width=20)
-    submit_button.pack(pady=10)
+    label = tk.Label(window, text=f"Password for room {room_number}", bg="#FFFFFF", font=("Helvetica", 12))
+    label.pack(pady=(15, 0))  # 위쪽 패딩만 조정하여 Label과 Entry 사이의 거리를 조절합니다.
+    entry = tk.Entry(window, width=25, font=("Helvetica", 15), justify="center") 
+    entry.pack(pady=(0, 15))  # 위쪽 패딩을 0으로 설정하여 Label 바로 아래 위치하게 합니다.
+    show_numpad(mode='check_password')
 
 def check_password():
     password = entry.get()
@@ -53,14 +53,14 @@ def check_password():
 def show_complete_button():
     for widget in window.winfo_children():
         widget.destroy()
-    complete_button = tk.Button(window, text="Delivery Complete", command=end_process, height=4, width=30, font=("Calibri", 25))
+    complete_button = tk.Button(window, text="Delivery Complete", command=end_process, height=4, width=30, relief="flat", font=("Calibri", 25), bg="#FFFFFF")
     complete_button.pack(pady=50)
 
 def end_process():
     messagebox.showinfo("Complete", "Delivery is complete.")
     window.quit()
 
-def show_numpad():
+def show_numpad(mode='send_communication'):
     # Create the frame for the numpad.
     numpad_frame = tk.Frame(window, bg="#FFFFFF")
     numpad_frame.pack(pady=10)
@@ -75,21 +75,24 @@ def show_numpad():
     for text, row, col in buttons:
         if text == "←":
             button = tk.Button(numpad_frame, text=text, command=backspace, height=2, width=7, bg="#EFEFFB", relief="flat", borderwidth=2)
-            #button = tk.Button(numpad_frame, text=text, command=lambda num=text: append_number(num), height=3, width=7, bg="white", borderwidth=0, relief="flat", activebackground="gray")
-
         elif text == "OK":
-            button = tk.Button(numpad_frame, text=text, command=send_communication, height=2, width=7, bg="#EFEFFB", relief="flat", borderwidth=2)
+            if mode == 'send_communication':
+                button = tk.Button(numpad_frame, text=text, command=send_communication, height=2, width=7, bg="#EFEFFB", relief="flat", borderwidth=2)
+            elif mode == 'check_password':
+                button = tk.Button(numpad_frame, text=text, command=check_password, height=2, width=7, bg="#EFEFFB", relief="flat", borderwidth=2)
         else:
             button = tk.Button(numpad_frame, text=text, command=lambda num=text: append_number(num), height=2, width=7, bg="#EFEFFB", relief="flat", borderwidth=2)
         button.grid(row=row, column=col, padx=5, pady=5)
-
 
 window = tk.Tk()
 window.title("Autonomous Delivery")
 window.configure(background="#FFFFFF")
 
-entry = tk.Entry(window, width=40, font=("Georgia", 15))
-entry.pack(pady=15)
+label = tk.Label(window, text="Please enter your destination", bg="#FFFFFF", font=("Helvetica", 12))
+label.pack(pady=(15, 0))  # 위쪽 패딩만 조정하여 Label과 Entry 사이의 거리를 조절합니다.
+
+entry = tk.Entry(window, width=25, font=("Helvetica", 15), justify="center")
+entry.pack(pady=(0, 15))  # 위쪽 패딩을 0으로 설정하여 Label 바로 아래 위치하게 합니다.
 
 show_numpad()
 
