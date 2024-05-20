@@ -33,8 +33,7 @@ def backspace():
     entry.insert(tk.END, current[:-1])
     
 def ready_close() :
-  send_command('close')
-  time.sleep(4)
+  send_command('0')
   show_receive_button()
   
 def send_communication():
@@ -59,13 +58,13 @@ def show_receive_button():
     show_numpad(mode='check_password')
 
 def password_complete() :
-  send_command('open')
+  send_command('1')
   show_complete_button()
 
 def check_password():
     password = entry.get()
     if password == passwords[room_number]:
-        show_complete_button()
+        password_complete()
     else:
         messagebox.showerror("Error", "Incorrect password.")
         entry.delete(0, tk.END)
@@ -77,8 +76,7 @@ def show_complete_button():
     complete_button.pack(pady=50)
 
 def end_close() :
-  send_command('close')
-  time.sleep(4)
+  send_command("close")
   end_process()
   
 def end_process():
@@ -111,11 +109,11 @@ def show_start_screen():
     """Displays the start screen with a start button."""
     for widget in window.winfo_children():
         widget.destroy()
-    start_button = tk.Button(window, text="Start", command=show_room_entry_screen, height=4, width=30, relief="flat", font=("Calibri", 25), bg="#FFFFFF")
+    start_button = tk.Button(window, text="Start", command=start_button_pressed, height=4, width=30, relief="flat", font=("Calibri", 25), bg="#FFFFFF")
     start_button.pack(pady=50)
 
 def start_button_pressed() :
-  send_command('open')
+  send_command('1')
   show_room_entry_screen()
   
 def show_room_entry_screen():
