@@ -16,16 +16,20 @@ void loop() {
     if (direction == "open") {
       digitalWrite(motorPin1, HIGH);
       digitalWrite(motorPin2, LOW);
-      pwmValue = 255;
-      analogWrite(ENA, pwmValue);
-      delay(4000);
+      pwm(255, 9400);
+      pwm(0, 100);
     }
     else if (direction == "close") {
       digitalWrite(motorPin1, LOW);
       digitalWrite(motorPin2, HIGH);
-      pwmValue = 150;
-      analogWrite(ENA, pwmValue);
-      delay(4000);
+      pwm(40, 4000);
+      pwm(150, 3000);
+      pwm(0, 100);
     }
   }
+}
+
+void pwm(int pwmValue, int delay_time) {
+  analogWrite(ENA, pwmValue);
+  delay(delay_time);
 }
