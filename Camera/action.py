@@ -86,8 +86,8 @@ def show_receive_button():
     show_numpad(mode='check_password')
 
 def password_complete() :
-  send_commandz("open")
-  show_complete_button()
+    send_commandz("open")
+    show_complete_button()
 
 def check_password():
     password = entry.get()
@@ -157,9 +157,9 @@ def show_start_screen():
     start_button.pack(pady=50)
 
 def start_button_pressed() :
-  send_commandz("open")
-  show_room_entry_screen()
-  
+    send_commandz("open")
+    show_room_entry_screen()
+
 def show_room_entry_screen():
     for widget in window.winfo_children():
         widget.destroy()
