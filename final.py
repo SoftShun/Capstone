@@ -38,12 +38,23 @@ except Exception as e:
     print(f"YOLO Error : {e}")
     exit()
     
+# 카메라 관련 설정 변수
+camera_width = 320
+camera_height = 240
+crop_roi_line = [120, 240, 0, 320]  # 라인 트레이싱 관심 영역
+crop_roi_yolo = [0, 416, 0, 416]    # YOLO 관심 영역 (전체 프레임 사용)
+    
 moving = False
 room_number = None
 entry = None
 window = None
-distance_threshold = 11000
+distance_threshold = 6000
 line_tracing_enabled = False
+
+# 카메라 객체 생성
+cap = cv2.VideoCapture(0)  
+cap.set(3, camera_width)
+cap.set(4, camera_height)
 
 def center_window(window, width, height):
     screen_width = window.winfo_screenwidth()
@@ -215,16 +226,19 @@ def send_commandz(command) :
     ser2.write(command.encode())
 
 # Function to detect obstacles using YOLO
-def detect_obstacle(cap, distance_threshold):
+def detect_obstacle(distance_threshold):
+    global moving, line_tracing_enabled
     ret, frame = cap.read()
     if not ret:
         return False
     
     height, width, channels = frame.shape
-
+    
+    crop_img = frame[crop_roi_yolo[0]:crop_roi_yolo[1], crop_roi_yolo[2]:crop_roi_yolo[3]] 
+    
     # Create a blob from the frame
-    blob = cv2.dnn.blobFromImage(frame, 0.00392, (416, 416), (0, 0, 0), True, crop=False)
-
+    blob = cv2.dnn.blobFromImage(crop_img, 0.00392, (416, 416), (0, 0, 0), True, crop=False)
+    
     # Pass the blob through the network and get predictions
     net.setInput(blob)
     outs = net.forward(output_layers)
@@ -246,28 +260,24 @@ def detect_obstacle(cap, distance_threshold):
                 w = int(detection[2] * width)
                 h = int(detection[3] * height)
 
-                # 거리 추정 (예시: bounding box 크기 기반)
-                area = w * h
+                # 다리 부분만 감지하도록 수정
+                leg_y_start = center_y + h // 4  # Bounding box 중심에서 1/4 아래부터
+                leg_y_end = center_y + h  # Bounding box 아래쪽 끝까지
+                leg_area = w * (leg_y_end - leg_y_start)
+                
                 color = (0, 255, 0)  # Green for far
-                if area > distance_threshold:  # 사람도 포함하여 임계값보다 크면 장애물로 인식
+                if leg_area > distance_threshold:  # 다리 부분 면적 기준으로 판단
                     obstacle_detected = True
                     color = (0, 0, 255)  # Red for close
 
-                # Draw bounding box and label
-                cv2.rectangle(frame, (center_x - w // 2, center_y - h // 2), (center_x + w // 2, center_y + h // 2), color, 2)
-
-    # Show the frame in a separate window
-    cv2.imshow("Camera Feed", frame)
-    cv2.waitKey(1)
+                # Draw bounding box and label (다리 부분만 표시)
+                cv2.rectangle(frame, (center_x - w // 2, leg_y_start), (center_x + w // 2, leg_y_end), color, 2)
 
     return obstacle_detected
 
 # Function to monitor obstacles
 def monitor_obstacles():
     global moving, line_tracing_enabled
-    cap = cv2.VideoCapture(0)  # Open the default camera
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
     
     if not cap.isOpened():
         print("Error: Could not open camera.")
@@ -282,56 +292,54 @@ def monitor_obstacles():
                 moving = True
                 line_tracing_enabled = True
                 
-            time.sleep(0.6)
+            time.sleep(0.5)
     finally:
         cap.release()
 
 def line_follower():
     global line_tracing_enabled
-    camera = cv2.VideoCapture(0)
-    camera.set(3, 160)
-    camera.set(4, 120)
 
-    while camera.isOpened():
-        ret, frame = camera.read()
+    while True :
+        if line_tracing_enabled and moving :
+            ret, frame = cap.read()
+            if not ret:
+                continue  # 프레임 읽기 실패 시 다음 루프로
+              
+            crop_img = frame[crop_roi_line[0]:crop_roi_line[1], crop_roi_line[2]:crop_roi_line[3]]
+            gray = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
+            blur = cv2.GaussianBlur(gray, (5, 5), 0)  # 노이즈 제거
 
-        crop_img = frame[60:120, 0:160]  # 관심 영역 설정
+            # 검은색 선을 찾기 위한 이진화 (THRESH_BINARY 사용)
+            ret, thresh1 = cv2.threshold(blur, 130, 255, cv2.THRESH_BINARY) 
 
-        gray = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
-        blur = cv2.GaussianBlur(gray, (5, 5), 0)  # 노이즈 제거
+            mask = cv2.erode(thresh1, None, iterations=2)
+            mask = cv2.dilate(mask, None, iterations=2)
 
-        # 검은색 선을 찾기 위한 이진화 (THRESH_BINARY 사용)
-        ret, thresh1 = cv2.threshold(blur, 130, 255, cv2.THRESH_BINARY) 
+            contours, hierarchy = cv2.findContours(mask.copy(), 1, cv2.CHAIN_APPROX_NONE)
 
-        mask = cv2.erode(thresh1, None, iterations=2)
-        mask = cv2.dilate(mask, None, iterations=2)
+            if len(contours) > 0:
+                c = max(contours, key=cv2.contourArea)
+                M = cv2.moments(c)
 
-        contours, hierarchy = cv2.findContours(mask.copy(), 1, cv2.CHAIN_APPROX_NONE)
+                cx = int(M['m10'] / M['m00'])
+                cy = int(M['m01'] / M['m00'])
 
-        if len(contours) > 0:
-            c = max(contours, key=cv2.contourArea)
-            M = cv2.moments(c)
+                cv2.circle(crop_img, (cx, cy), 5, (0, 0, 255), -1)  # 중심점 표시 (선택 사항)
 
-            cx = int(M['m10'] / M['m00'])
-            cy = int(M['m01'] / M['m00'])
-
-            cv2.circle(crop_img, (cx, cy), 5, (0, 0, 255), -1)  # 중심점 표시 (선택 사항)
-
-            if cx >= 95 and cx <= 125:
-                send_command("left\n")
-                print("Turn Left")
-                time.sleep(0.2)
-            elif cx >= 39 and cx <= 65:
-                send_command("right\n")
-                print("Turn Right")
-                time.sleep(0.2)
-            else:
-                send_command("go\n")
-                print("go")
-                time.sleep(0.2)
-
-    camera.release()
-    cv2.destroyAllWindows()
+                if cx >= 95 and cx <= 125:
+                    send_command("left\n")
+                    print("Turn Left")
+                    time.sleep(0.2)
+                elif cx >= 39 and cx <= 65:
+                    send_command("right\n")
+                    print("Turn Right")
+                    time.sleep(0.2)
+                else:
+                    send_command("go\n")
+                    print("go")
+                    time.sleep(0.2)
+        else :
+          time.sleep(0.1)
 
 def main() :
     # Start obstacle monitoring in a separate thread
@@ -345,7 +353,7 @@ def main() :
     
     global window, distance_threshold
     
-    distance_threshold = 12000  # 임계값 설정 (적절한 값으로 조정)
+    distance_threshold = 6000  # 임계값 설정 (적절한 값으로 조정)
     window = tk.Tk()
     window.title("Autonomous Delivery")
     window.configure(background="#FFFFFF")
