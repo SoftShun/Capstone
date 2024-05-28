@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import messagebox
 
 #ser1 = serial.Serial('/dev/ttyACM0', 9600)
-#ser2 = serial.Serial('/dev/ttyACM1', 9600)
+ser2 = serial.Serial('/dev/ttyACM1', 9600)
 time.sleep(2)
 
 passwords = {
@@ -33,8 +33,17 @@ def backspace():
     entry.insert(tk.END, current[:-1])
     
 def ready_close() :
-  send_command('0')
-  show_receive_button()
+  send_command("close")
+  moving_message()
+
+  
+def moving_message():
+    for widget in window.winfo_children():
+        widget.destroy()
+    global entry
+    label = tk.Label(window, text="Moving...", bg="#FFFFFF", font=("Helvetica", 50))
+    label.pack(pady=(120, 0))
+    window.after(5000, show_receive_button)  # 5초 후에 show_receive_button 함수 호출   // 이건 수정해야 됨. if 문으로
   
 def send_communication():
     global room_number
@@ -58,7 +67,7 @@ def show_receive_button():
     show_numpad(mode='check_password')
 
 def password_complete() :
-  send_command('1')
+  send_command("open")
   show_complete_button()
 
 def check_password():
@@ -113,7 +122,7 @@ def show_start_screen():
     start_button.pack(pady=50)
 
 def start_button_pressed() :
-  send_command('1')
+  send_command("open")
   show_room_entry_screen()
   
 def show_room_entry_screen():
