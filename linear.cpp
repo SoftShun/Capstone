@@ -16,14 +16,15 @@ void loop() {
     if (direction == "open") {
       digitalWrite(motorPin1, HIGH);
       digitalWrite(motorPin2, LOW);
-      pwm(255, 9400);
+      pwm(255, 9800);
+      pwm(170, 500);
       pwm(0, 100);
     }
     else if (direction == "close") {
       digitalWrite(motorPin1, LOW);
       digitalWrite(motorPin2, HIGH);
       pwm(40, 4000);
-      pwm(150, 3000);
+      pwm(150, 3600);
       pwm(0, 100);
     }
   }
